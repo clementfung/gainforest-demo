@@ -51,20 +51,10 @@ const Singleplayer = () => {
         debug: true
       });
 
-      let PlayerTwo = Client({
-        board: Board,
-        proxy: proxy2,
-        playerId: 2,
-        players: [1, 2],
-        multiplayer: null,
-        debug: true
-      });
-
       return (
         <div className="code flex flex-column w-100 h-100 items-center bg-light-gray">
           <PlayerOne />
           <br/>
-          <PlayerTwo />
         </div>
       );
     }} />

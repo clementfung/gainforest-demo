@@ -30,9 +30,15 @@ td {
 
 td.active {
   cursor: pointer;
-  background: #eeffe9;
+  background: #1fc600;
 }
 
-td.active:hover {
-  background: #eeffff;
+td.forested {
+  cursor: pointer;
+  background: #063b00;
+}
+
+td.deforested {
+  cursor: pointer;
+  background: #654321;
 }

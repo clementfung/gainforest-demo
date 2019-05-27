@@ -14,6 +14,9 @@ use std::error::Error;
 use oasis_game_core::{*, Game as InnerGame};
 use oasis_game_core_derive::{flow, moves};
 
+const DEFORESTED_IDS: [usize; 6] = [5, 6, 7, 13, 14, 15];
+const PAYOUT: i32 = 2;
+
 /// Error types.
 quick_error! {
     #[derive(Debug)]
@@ -27,47 +30,41 @@ quick_error! {
 
 /// Define the state shape.
 /// State type.
-pub type Cells = [i32; 9];
+pub type Cells = [i32; 32];
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct State {
-    pub cells: Cells
+    pub cells: Cells,
+    pub forest: Cells,
+    pub stake: i32,
+    pub year: i32
 }
+
 impl Default for State {
     fn default() -> Self {
         State {
-            cells: [-1; 9]
+            cells: [0; 32],
+            forest: [0; 32],
+            stake: 100,
+            year: 2019
         }
     }
 }
 
-fn is_victory (cells: Cells) -> Option<[usize; 3]> {
-    let positions: [[usize; 3]; 8] = [
-        [0, 1, 2],
-        [3, 4, 5],
-        [6, 7, 8],
-        [0, 3, 6],
-        [1, 4, 7],
-        [2, 5, 8],
-        [0, 4, 8],
-        [2, 4, 6]
-    ];
-    for (_, pos) in positions.iter().enumerate() {
-        let symbol = cells[pos[0]];
-        if symbol == -1 {
-            continue;
-        }
-        let mut won = Some(*pos);
-        for (_, i) in pos.iter().enumerate() {
-            if cells[*i] != symbol {
-                won = None;
-                break;
+fn forest_growth(state: &mut UserState<State>) {
+    for id in 0..state.g.cells.len() {
+        // The forest grows
+        if DEFORESTED_IDS.into_iter().find(|&&x| x == id).is_none() { 
+            state.g.forest[id] = 1;
+            if state.g.cells[id] != 0 {
+                state.g.stake += state.g.cells[id];
+                state.g.stake += PAYOUT;
             }
+        } else {
+            state.g.forest[id] = -1;
         }
-        if won.is_some() {
-            return won;
-        }
+        state.g.cells[id] = 0;
     }
-    None
+    state.g.year += 1;
 }
 
 /// Define your moves as methods in this trait.
@@ -81,16 +78,22 @@ trait Moves {
                 .and_then(|cell| cell.as_u64())
                 .and_then(|cell| Some(cell as usize))
                 .ok_or(Box::new(Errors::InvalidCell))?;
-            match state.g.cells[id] {
-                -1 => {
-                    state.g.cells[id] = state.ctx.current_player as i32;
+            
+            match id {
+                99 => {
+                    forest_growth(state);
                     Ok(())
                 },
-                _ => Err(Box::new(Errors::InvalidCell))
+                _ => {
+                    state.g.stake -= 5;
+                    state.g.cells[id] += 5;
+                    Ok(())
+                }
             }
+         
         } else {
             return Err(Box::new(Errors::InvalidCell))
-        }
+        } 
     }
 }
 
@@ -102,25 +105,11 @@ trait Flow {
     }
 
     fn end_turn_if(&self, _: &UserState<State>) -> bool {
-        // End the turn after every move.
-        true
+        // Do not end the turn
+        false
     }
 
     fn end_game_if(&self, state: &UserState<State>) -> Option<(Option<Score>, Value)> {
-        // TODO: Make a macro to simplify returning JSON values.
-        // TODO: The error handling case for these flow methods is still inadequate.
-        if let Some(pos) = is_victory(state.g.cells) {
-            let winner = state.ctx.current_player;
-            return Some((Some(Score::Win(winner)), json!({
-                "winner": winner,
-                "winning_cells": pos
-            })));
-        }
-        if state.g.cells.into_iter().all(|c| *c != -1) {
-            return Some((Some(Score::Draw), json!({
-                "draw": true
-            })));
-        }
         None
     }
 }

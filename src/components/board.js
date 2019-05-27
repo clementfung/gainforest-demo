@@ -23,89 +23,51 @@ class Board extends React.Component {
   };
 
   onClick = id => {
-    if (this.isActive(id)) {
-      this.props.moves.click_cell(id)
-    }
+    this.props.moves.click_cell(id)
   };
-
-  isActive(id) {
-    let ctx = this.props.ctx
-    let playerId = this.props.playerID
-    let myTurn = playerId && (
-      ctx.current_player === playerId ||
-      (ctx.active_players && ctx.active_players.indexOf(playerId) !== -1)
-    )
-    return myTurn && this.props.G.cells[id] === -1
-  }
 
   format (cellValue) {
     if (cellValue === -1) return '';
     return cellValue;
   }
 
-  getVictoryInfo () {
-    let gameover = this.props.ctx.gameover
-    if (gameover) {
-      let victoryInfo = {};
-      if (!gameover.winner) {
-        var color = 'orange'
-        var text = 'It\'s a draw!'
-      } else {
-        color = (gameover.winner == this.props.playerID || this.props.isSpectating) ? 'green' : 'red'
-        text = `Player ${gameover.winner} won!`
-      }
-      victoryInfo.winner = <div className={color} id="winner">{text}</div>;
-      victoryInfo.color = color
-      victoryInfo.cells = new Set(gameover.winning_cells)
-      console.log('VICTORY INFO:', victoryInfo)
-      return victoryInfo
+  getCellClass (id) {
+    switch (this.props.G.forest[id]) {
+      case 1:
+        return 'forested';
+      case -1: 
+        return 'deforested';
+      default: 
+        return 'active';  
     }
-    return null
-  }
-
-  getCellClass (victoryInfo, id) {
-    let cellClass = this.isActive(id) ? 'active' : ''
-    if (victoryInfo && victoryInfo.cells.has(id)) {
-      cellClass += ` bg-${victoryInfo.color} white`
-    }
-    return cellClass
   }
 
   render() {
-    let victoryInfo = this.getVictoryInfo() 
     let tbody = [];
-    for (let i = 0; i < 3; i++) {
+    for (let i = 0; i < 4; i++) {
       let cells = [];
 
-      for (let j = 0; j < 3; j++) {
-        const id = 3 * i + j;
+      for (let j = 0; j < 8; j++) {
+        const id = 8 * i + j;
 
         let cellValue = '';
-        switch (this.props.G.cells[id]) {
-            case 1:
-                cellValue = 'X';
-                break;
-            case 2:
-                cellValue = "O";
-                break;
+        if (this.props.G.cells[id] != 0) {
+          cellValue = this.props.G.cells[id];
+          cellValue = cellValue + '💲';
         }
 
         cells.push(
           <td
             key={id}
-            className={this.getCellClass(victoryInfo, id)}
+            className={this.getCellClass(id)}
             onClick={() => this.onClick(id)}
           >
-            {cellValue}
+            {cellValue} 
           </td>
         );
       }
       tbody.push(<tr key={i}>{cells}</tr>);
-    }
 
-    let player = null;
-    if (this.props.playerID) {
-      player = <div id="player">Player: {this.props.playerID}</div>;
     }
 
     let rendered = (
@@ -113,7 +75,15 @@ class Board extends React.Component {
         <table id="board">
           <tbody>{tbody}</tbody>
         </table>
-        <GameInfo winner={victoryInfo ? victoryInfo.winner : null} {...this.props} />
+        <td
+            key={99}
+            className={'active'}
+            onClick={() => this.onClick(99)}
+          >
+          🛰    
+        </td>
+        <p> Year: { this.props.G.year } </p>
+        <p> Balance: { this.props.G.stake } </p>
       </div>
     );
     console.log('RETURNING RENDERED:', rendered)
