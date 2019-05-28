@@ -5,6 +5,8 @@ extern crate serde_json;
 #[macro_use]
 extern crate quick_error;
 
+extern crate rand;
+
 extern crate oasis_game_core;
 #[macro_use]
 extern crate oasis_game_core_derive;
@@ -13,6 +15,7 @@ use serde_json::Value;
 use std::error::Error;
 use oasis_game_core::{*, Game as InnerGame};
 use oasis_game_core_derive::{flow, moves};
+use rand::{Rng, SeedableRng, ChaChaRng};
 
 const DEFORESTED_IDS: [usize; 6] = [5, 6, 7, 13, 14, 15];
 const PAYOUT: i32 = 2;
@@ -54,10 +57,39 @@ impl Default for State {
     }
 }
 
+// Returns a vector of the tile indices
+fn draw_forests(seed: u128, num_tiles_needed: u8) -> Vec<i32> {
+    
+    let mut seed_arr = [0 as u8; 32];
+    for (i, byte) in seed.to_le_bytes().iter().enumerate() {
+        seed_arr[i] = *byte
+    };
+
+    let mut rng = ChaChaRng::from_seed(seed_arr);
+
+    let mut num_tiles_drawn: u8 = 0;
+    let mut tile_vec = Vec::new();
+    let mut drawn_tiles = [false; 32];
+
+    while num_tiles_drawn != num_tiles_needed {
+        let idx = rng.gen_range(0, 32);
+        if !drawn_tiles[idx] {
+            drawn_tiles[idx] = true;
+            num_tiles_drawn += 1;
+            tile_vec.push(idx as i32);
+        }
+    }
+
+    return tile_vec;
+} 
+
 fn forest_growth(state: &mut UserState<State>) {
+
+    let deforested_tiles = draw_forests(state.ctx.seed.unwrap(), 6);
+
     for id in 0..state.g.cells.len() {
         // The forest grows
-        if DEFORESTED_IDS.into_iter().find(|&&x| x == id).is_none() { 
+        if deforested_tiles.clone().into_iter().find(|&x| x == id as i32).is_none() { 
             state.g.forest[id] = 1;
             if state.g.cells[id] != 0 {
                 state.g.stake += state.g.cells[id];
@@ -111,6 +143,15 @@ trait Moves {
 trait Flow {
     fn initial_state(&self, seed: Option<u128>) -> State {
         Default::default()
+    }
+
+    fn on_move(&self, state: &mut UserState<State>, _: &Move) -> Result<(), Box<Error>> {
+        
+        // Manually advance the random seed
+        let bumpable_seed = state.ctx.seed.expect("");
+        state.ctx.seed = Some(bumpable_seed + 1);
+        Ok(())
+
     }
 
     fn end_turn_if(&self, _: &UserState<State>) -> bool {
