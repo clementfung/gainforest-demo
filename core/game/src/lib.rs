@@ -35,7 +35,9 @@ pub type Cells = [i32; 32];
 pub struct State {
     pub cells: Cells,
     pub forest: Cells,
+    pub outcome: Cells,
     pub stake: i32,
+    pub balance_history: Vec<i32>,
     pub time: i32
 }
 
@@ -44,7 +46,9 @@ impl Default for State {
         State {
             cells: [0; 32],
             forest: [0; 32],
+            outcome: [0; 32],
             stake: 100,
+            balance_history: Vec::new(),
             time: 0
         }
     }
@@ -58,13 +62,18 @@ fn forest_growth(state: &mut UserState<State>) {
             if state.g.cells[id] != 0 {
                 state.g.stake += state.g.cells[id];
                 state.g.stake += PAYOUT;
+                state.g.outcome[id] = 1;
+            } else {
+                state.g.outcome[id] = 0;
             }
         } else {
+            state.g.outcome[id] = 0;
             state.g.forest[id] = -1;
         }
         state.g.cells[id] = 0;
     }
     state.g.time += 1;
+    state.g.balance_history.push(state.g.stake);
 }
 
 /// Define your moves as methods in this trait.

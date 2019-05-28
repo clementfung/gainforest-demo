@@ -55,6 +55,8 @@ class Board extends React.Component {
           cellValue = cellValue + '💲';
         } else if (this.props.G.forest[id] === -1) {
           cellValue = '🔥';
+        } else if (this.props.G.outcome[id] === 1) {
+          cellValue = '🌴';
         }
 
         cells.push(
@@ -87,8 +89,9 @@ class Board extends React.Component {
         <td
             key={99}
             onClick={() => this.onClick(99)}
+            background={"https://i.imgur.com/uU2BF2v.png"}
           >
-          🛰    
+          { '🛰' }
         </td>
         <p> Time: {(2016 + Math.floor(this.props.G.time / 4)) + "q" + ((this.props.G.time % 4) + 1)} </p>
         <p> Balance: { this.props.G.stake } </p>
