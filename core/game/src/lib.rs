@@ -36,7 +36,7 @@ pub struct State {
     pub cells: Cells,
     pub forest: Cells,
     pub stake: i32,
-    pub year: i32
+    pub time: i32
 }
 
 impl Default for State {
@@ -45,7 +45,7 @@ impl Default for State {
             cells: [0; 32],
             forest: [0; 32],
             stake: 100,
-            year: 2019
+            time: 0
         }
     }
 }
@@ -64,7 +64,7 @@ fn forest_growth(state: &mut UserState<State>) {
         }
         state.g.cells[id] = 0;
     }
-    state.g.year += 1;
+    state.g.time += 1;
 }
 
 /// Define your moves as methods in this trait.

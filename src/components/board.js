@@ -8,7 +8,6 @@
 
 import React from 'react';
 import PropTypes from 'prop-types';
-import { GameInfo } from 'oasis-game-components';
 import './board.css';
 
 class Board extends React.Component {
@@ -62,12 +61,22 @@ class Board extends React.Component {
             className={this.getCellClass(id)}
             onClick={() => this.onClick(id)}
           >
-            {cellValue} 
+            <img 
+              src={"https://tiles.planet.com/basemaps/v1/planet-tiles/global_quarterly_" 
+                + (2016 + Math.floor(this.props.G.time / 4)) 
+                + "q" 
+                + ((this.props.G.time % 4) + 1) 
+                + "_mosaic/gmap/11/72" 
+                + j
+                + "/106" 
+                + i 
+                + ".png?api_key=d4d25171b85b4f7f8fde459575cba233"}
+            >
+            </img>
           </td>
         );
       }
       tbody.push(<tr key={i}>{cells}</tr>);
-
     }
 
     let rendered = (
@@ -77,16 +86,14 @@ class Board extends React.Component {
         </table>
         <td
             key={99}
-            className={'active'}
             onClick={() => this.onClick(99)}
           >
           🛰    
         </td>
-        <p> Year: { this.props.G.year } </p>
+        <p> Time: {(2016 + Math.floor(this.props.G.time / 4)) + "q" + ((this.props.G.time % 4) + 1)} </p>
         <p> Balance: { this.props.G.stake } </p>
       </div>
     );
-    console.log('RETURNING RENDERED:', rendered)
     return rendered;
   }
 }
