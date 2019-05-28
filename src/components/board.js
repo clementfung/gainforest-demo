@@ -53,6 +53,8 @@ class Board extends React.Component {
         if (this.props.G.cells[id] != 0) {
           cellValue = this.props.G.cells[id];
           cellValue = cellValue + '💲';
+        } else if (this.props.G.forest[id] === -1) {
+          cellValue = '🔥';
         }
 
         cells.push(
@@ -60,9 +62,7 @@ class Board extends React.Component {
             key={id}
             className={this.getCellClass(id)}
             onClick={() => this.onClick(id)}
-          >
-            <img 
-              src={"https://tiles.planet.com/basemaps/v1/planet-tiles/global_quarterly_" 
+            background={"https://tiles.planet.com/basemaps/v1/planet-tiles/global_quarterly_" 
                 + (2016 + Math.floor(this.props.G.time / 4)) 
                 + "q" 
                 + ((this.props.G.time % 4) + 1) 
@@ -72,7 +72,7 @@ class Board extends React.Component {
                 + i 
                 + ".png?api_key=d4d25171b85b4f7f8fde459575cba233"}
             >
-            </img>
+            { cellValue }
           </td>
         );
       }
